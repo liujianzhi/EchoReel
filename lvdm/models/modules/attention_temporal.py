@@ -262,28 +262,27 @@ class BasicTransformerBlockST(nn.Module):
         # Temporal
         temporal_length=None,   
         use_relative_position=True,
-        # video inject
-        video_inject=False,
+        EchoReel=False,
         **kwargs,
     ):
         super().__init__()
-        self.video_inject = video_inject
+        self.EchoReel = EchoReel
         # spatial self attention (if context_dim is None) and spatial cross attention
         if XFORMERS_IS_AVAILBLE:
             self.attn1 = MemoryEfficientCrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
             self.attn2 = MemoryEfficientCrossAttention(query_dim=dim, context_dim=context_dim,
                                     heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
-            if video_inject:
-                self.video_inject_attn3 = MemoryEfficientCrossAttention(query_dim=dim, context_dim=64,
+            if EchoReel:
+                self.EchoReel_attn3 = MemoryEfficientCrossAttention(query_dim=dim, context_dim=64,
                                     heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
-                self.video_inject_attn3._modules['to_out'][0]._parameters['weight'].data.zero_()
-                self.video_inject_attn3._modules['to_out'][0]._parameters['bias'].data.zero_()
+                self.EchoReel_attn3._modules['to_out'][0]._parameters['weight'].data.zero_()
+                self.EchoReel_attn3._modules['to_out'][0]._parameters['bias'].data.zero_()
         else:
             self.attn1 = CrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
             self.attn2 = CrossAttention(query_dim=dim, context_dim=context_dim,
                                     heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
-            if video_inject:    
-                self.video_inject_attn3 = CrossAttention(query_dim=dim, context_dim=64,
+            if EchoReel:    
+                self.EchoReel_attn3 = CrossAttention(query_dim=dim, context_dim=64,
                                     heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
         self.ff = FeedForward(dim, dropout=dropout, glu=gated_ff)
         
@@ -306,8 +305,8 @@ class BasicTransformerBlockST(nn.Module):
                                                 use_relative_position=use_relative_position,
                                                 **kwargs,
         )
-        if video_inject:
-            self.video_inject_attn3_tmp = TemporalCrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout,
+        if EchoReel:
+            self.EchoReel_attn3_tmp = TemporalCrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout,
                                                     # cross attn
                                                     context_dim=4096,
                                                     # temporal attn
@@ -315,13 +314,13 @@ class BasicTransformerBlockST(nn.Module):
                                                     use_relative_position=use_relative_position,
                                                     **kwargs,
             )
-            self.video_inject_attn3_tmp._modules['to_out'][0]._parameters['weight'].data.zero_()
-            self.video_inject_attn3_tmp._modules['to_out'][0]._parameters['bias'].data.zero_()
+            self.EchoReel_attn3_tmp._modules['to_out'][0]._parameters['weight'].data.zero_()
+            self.EchoReel_attn3_tmp._modules['to_out'][0]._parameters['bias'].data.zero_()
         self.norm4 = nn.LayerNorm(dim)
         self.norm5 = nn.LayerNorm(dim)
-        if video_inject:
-            self.video_inject_norm6 = nn.LayerNorm(dim)
-            self.video_inject_norm7 = nn.LayerNorm(dim)
+        if EchoReel:
+            self.EchoReel_norm6 = nn.LayerNorm(dim)
+            self.EchoReel_norm7 = nn.LayerNorm(dim)
         
     def forward(self, x, context=None, **kwargs):
         if 'Tout' in kwargs.keys():
@@ -373,17 +372,17 @@ class BasicTransformerBlockST(nn.Module):
         x = self.attn2_tmp(self.norm5(x), context=None, mask=mask) + x
 
         # imporve video motion cross attention
-        if self.video_inject:
+        if self.EchoReel:
             # spatial cross attention
             x = rearrange(x, '(b h w) t c -> (b t) (h w) c', b=b,h=h)
             if Sin_ is not None:
-                x = self.video_inject_attn3(self.video_inject_norm6(x), context=Sin_) + x
+                x = self.EchoReel_attn3(self.EchoReel_norm6(x), context=Sin_) + x
             x = rearrange(x, '(b t) (h w) c -> b c t h w', b=b,h=h)
 
             # # # temporal cross attention
             x = rearrange(x, 'b c t h w -> (b h w) t c')
             if Tin_ is not None:
-                x = self.video_inject_attn3_tmp(self.video_inject_norm7(x), context=Tin_, mask=mask) + x
+                x = self.EchoReel_attn3_tmp(self.EchoReel_norm7(x), context=Tin_, mask=mask) + x
 
         # feedforward
         x = self.ff(self.norm3(x)) + x
@@ -408,7 +407,7 @@ class SpatialTemporalTransformer(nn.Module):
         # Temporal
         temporal_length=None,
         use_relative_position=True,
-        video_inject=False,
+        EchoReel=False,
         **kwargs,
         ):
         super().__init__()
@@ -430,7 +429,7 @@ class SpatialTemporalTransformer(nn.Module):
                 # temporal attn
                 temporal_length=temporal_length,   
                 use_relative_position=use_relative_position,
-                video_inject=video_inject,
+                EchoReel=EchoReel,
                 **kwargs
                 ) for d in range(depth)]
         )

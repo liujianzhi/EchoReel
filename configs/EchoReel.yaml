@@ -23,7 +23,7 @@ model:
     video_length: 16
     channels: 4
     cond_stage_trainable: false
-    conditioning_key: videoinject
+    conditioning_key: EchoReel
     scale_by_std: false
     scale_factor: 0.18215
     use_ema: false
@@ -56,7 +56,7 @@ model:
         use_temporal_transformer: true
         temporal_length: 16
         use_relative_position: true
-        video_inject: True
+        EchoReel: True
         # use_fp16: false
         
     first_stage_config:

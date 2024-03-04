@@ -61,18 +61,15 @@ class ucf(Dataset):
         data = self.dataset[index]
 
         input_text = data['input_text']
-        gt_video_path = os.path.join(self.datasetroot,'WebVid', data['gt_video_path'])
+        gt_video_path = os.path.join(self.datasetroot, data['gt_video_path'])
         inject_text = data['inject_text']
-        inject_video_path = os.path.join(self.datasetroot,'WebVid', data['inject_video_path'])
-        inject_video_path2 = os.path.join(self.datasetroot,'WebVid', self.dataset[index + 1]['inject_video_path'])
+        inject_video_path = os.path.join(self.datasetroot, data['inject_video_path'])
         gt_video = self.video(gt_video_path, index)
         inject_video = self.video(inject_video_path, index)
-        inject_video2 = self.video(inject_video_path2, index + 1)
         return {'input_text': input_text,
                 'gt_video': gt_video,
                 'inject_text': inject_text,
                 'inject_video': inject_video,
-                'inject_video3': inject_video2
             }
 
     def __len__(self):

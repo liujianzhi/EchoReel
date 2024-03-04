@@ -1330,7 +1330,7 @@ class DiffusionWrapper(pl.LightningModule):
             xc = torch.cat([x] + c_concat, dim=1)
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, s=s, y=c_adm, **kwargs)
-        elif self.conditioning_key == 'videoinject':
+        elif self.conditioning_key == 'EchoReel':
             out = self.diffusion_model(x, t, context=c_crossattn, inject_video=inject_video, inject_text=inject_text, **kwargs)
         else:
             raise NotImplementedError()

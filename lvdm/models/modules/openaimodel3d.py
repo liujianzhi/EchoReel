@@ -339,7 +339,7 @@ class Perceiver_layer(nn.Module):
         video = rearrange(video, '(b l) t c -> b t l c', b=b)
         return video
 
-class Perceiver(nn.Module):
+class Motion_Perceiver(nn.Module):
     def __init__(self, 
                  input_query_dim=4, 
                  latent_query_dim=640, 
@@ -445,12 +445,11 @@ class UNetModel(nn.Module):
         nonlinearity_type='silu',
         ST_transformer_module='attention_temporal',
         ST_transformer_class='SpatialTemporalTransformer',
-        video_inject=False,
+        EchoReel=False,
         **kwargs,
     ):
         
         super().__init__()
-        kwargs['video_inject'] = video_inject
         if use_temporal_transformer:
             assert context_dim is not None, 'Fool!! You forgot to include the dimension of your cross-attention conditioning...'
         if context_dim is not None:
@@ -458,7 +457,7 @@ class UNetModel(nn.Module):
             from omegaconf.listconfig import ListConfig
             if type(context_dim) == ListConfig:
                 context_dim = list(context_dim)
-
+        self.EchoReel = EchoReel
         if num_heads_upsample == -1:
             num_heads_upsample = num_heads
 
@@ -488,9 +487,9 @@ class UNetModel(nn.Module):
         self.temporal_length = temporal_length
         self.nonlinearity_type = nonlinearity_type
         
-        self.video_inject = video_inject
-        if self.video_inject:
-            self.video_inject_process = Perceiver()
+        self.EchoReel = EchoReel
+        if self.EchoReel:
+            self.Motion_Perceiver_process = Motion_Perceiver()
             pass
         time_embed_dim = model_channels * 4
         self.time_embed_dim = time_embed_dim
@@ -599,7 +598,6 @@ class UNetModel(nn.Module):
             dim_head = num_head_channels
         if legacy:
             dim_head = ch // num_heads if use_temporal_transformer else num_head_channels
-        # kwargs['video_inject'] = True
         self.middle_block = TimestepEmbedSequential(
             ResBlock(
                 ch,
@@ -641,7 +639,6 @@ class UNetModel(nn.Module):
                 **kwargs
             ),
         )
-        # kwargs['video_inject'] = False
         self._feature_size += ch
         self.output_blocks = nn.ModuleList([])
         for level, mult in list(enumerate(channel_mult))[::-1]:
@@ -757,9 +754,9 @@ class UNetModel(nn.Module):
         if y is not None:
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)
-        if self.video_inject == True:
+        if self.EchoReel == True:
             inject_video = rearrange(inject_video, 'b c t h w -> b t (h w) c')
-            Sout, Tout = self.video_inject_process(torch.cat((context, inject_text), dim=1), inject_video)
+            Sout, Tout = self.Motion_Perceiver_process(torch.cat((context, inject_text), dim=1), inject_video)
             kwargs['Sout'] = Sout
             kwargs['Tout'] = Tout
         # h = x.type(self.dtype)

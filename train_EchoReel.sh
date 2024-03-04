@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=1,2,3,4 python main.py \
-                            --config configs/video_inject.yaml \
+                            --config configs/EchoReel.yaml \
                             --devices 4 \
                             --name EchoReel \
                             --savedir logs \
