@@ -46,8 +46,8 @@
 </table >
 
 ## ⏳ TODO
-- [ ] Release code of LVDM text-to-video with EchoReel
-- [ ] Release training code
+- [x] Release code of LVDM text-to-video with EchoReel
+- [x] Release training code
 - [ ] Release pretrained weight
 - [ ] Release image-to-video VideoCrafter code with EchoReel
 
