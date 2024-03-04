@@ -77,6 +77,7 @@ pip install -r requirements.txt
 ## 💫 For Train
 
 ```bash
+wget -O models/t2v/model.ckpt https://huggingface.co/Yingqing/LVDM/resolve/main/lvdm_short/t2v.ckpt
 bash train_EchoReel.sh
 ```
 
