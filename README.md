@@ -15,6 +15,12 @@
     <img src=assets/banner.jpg />
 </p>
 
+
+<div style="text-align: center;">
+  <i>"Imitation is the sincerest form of flattery that mediocrity can pay to greatness."</i> — Oscar Wilde 
+</div>
+
+
 ## ✌️ Results
 <table class="center">
   <!-- <td style="text-align:center;" width="50">Input Text</td> -->
