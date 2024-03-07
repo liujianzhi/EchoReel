@@ -339,7 +339,7 @@ class Perceiver_layer(nn.Module):
         video = rearrange(video, '(b l) t c -> b t l c', b=b)
         return video
 
-class Motion_Perceiver(nn.Module):
+class Action_Prism(nn.Module):
     def __init__(self, 
                  input_query_dim=4, 
                  latent_query_dim=640, 
@@ -489,7 +489,7 @@ class UNetModel(nn.Module):
         
         self.EchoReel = EchoReel
         if self.EchoReel:
-            self.Motion_Perceiver_process = Motion_Perceiver()
+            self.Action_Prism_process = Action_Prism()
             pass
         time_embed_dim = model_channels * 4
         self.time_embed_dim = time_embed_dim
@@ -756,7 +756,7 @@ class UNetModel(nn.Module):
             emb = emb + self.label_emb(y)
         if self.EchoReel == True:
             inject_video = rearrange(inject_video, 'b c t h w -> b t (h w) c')
-            Sout, Tout = self.Motion_Perceiver_process(torch.cat((context, inject_text), dim=1), inject_video)
+            Sout, Tout = self.Action_Prism_process(torch.cat((context, inject_text), dim=1), inject_video)
             kwargs['Sout'] = Sout
             kwargs['Tout'] = Tout
         # h = x.type(self.dtype)
