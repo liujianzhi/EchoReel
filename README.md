@@ -2,18 +2,28 @@
 
 <h2> <img src="assets/favicon.ico" style="vertical-align: middle;" width="30" height="30"> EchoReel: <span style="font-size:12px">Enhancing Action Generation of Existing Video Diffusion Models </span> </h2>
 
+<a href='https://arxiv.org/abs/xx.xx'><img src='https://img.shields.io/badge/ArXiv-xx.xx-red'></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://liujianzhi.github.io/EchoReel/'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
+
+
 <div>
-    Jianzhi Liu &emsp; Junchen Zhu &emsp; Lianli Gao &emsp; Jingkuan Song <sup>*</sup>
+    <a href='https://github.com/liujianzhi' target='_blank'> Jianzhi Liu </a>&emsp;
+    <a href='https://scholar.google.com/citations?user=J0qJuYAAAAAJ&hl=zh-CN' target='_blank'> Junchen Zhu </a>&emsp;
+    <a href='https://scholar.google.com.au/citations?user=zsm2dpYAAAAJ&hl=en' target='_blank'> Lianli Gao </a>&emsp;
+    <a href='https://scholar.google.com.au/citations?user=F5Zy9V4AAAAJ&hl=en' target='_blank'> Jingkuan Song </a>&emsp;
 </div>
 <div>
     University of Electronic Science and Technology of China
 </div>
 <br>
+
+
+<b>An innovative method designed to augment the capabilities of existing video diffusion models that can:</b>  
+1️⃣ utilize multiple reference videos to achieve a broader spectrum of action imitation and generate novel actions without fine-tuning;  
+2️⃣ distill effective and related visual motion features instead of replicating the referred content.
+
+
 <div align="left">
 
-<p align="center">
-    <img src=assets/banner.jpg />
-</p>
 
 
 <div style="text-align: center;">
@@ -23,10 +33,9 @@
 
 ## ✌️ Results
 <table class="center">
-  <!-- <td style="text-align:center;" width="50">Input Text</td> -->
   <tr>
   <td style="text-align:center;" width="20%">input text</td>
-  <td style="text-align:center;" width="40%">Original LVDM</td>
+  <td style="text-align:center;" width="40%">Original VideoCrafter2</td>
   <td style="text-align:center;" width="40%">+ EchoReel</td>
   <tr>
   <td style="text-align:center;">"A man is studying in the library"</td>
@@ -49,7 +58,7 @@
   <td><img src=assets/9.gif></td>
   <td><img src=assets/10.gif></td>
 </tr>
-</table >
+</table > 
 
 ## ⏳ TODO
 - [x] Release code of LVDM text-to-video with EchoReel
@@ -66,8 +75,8 @@ Please prepare .json data in the following format:
 	{
 		"input_text": ...,
 		"gt_video_path": ...,
-		"inject_text": ...,
-		"inject_video_path": ...
+		"reference_text": ...,
+		"reference_video_path": ...
 	},
     ...
 ]
@@ -83,6 +92,7 @@ pip install -r requirements.txt
 ## 💫 For Train
 
 ```bash
+% use original LVDM pretrain weight to initialize model
 wget -O models/t2v/model.ckpt https://huggingface.co/Yingqing/LVDM/resolve/main/lvdm_short/t2v.ckpt
 bash train_EchoReel.sh
 ```
@@ -101,10 +111,12 @@ bash sample_EchoReel.sh
 ## 😉 Citation
 
 ```
-@article{LiuZGS2024EchoReel,
+@article{Liu2024EchoReel,
       title={EchoReel: Enhancing Action Generation of Existing Video Diffusion Models}, 
-      author={Jianzhi Liu and Junchen Zhu and Lianli Gao and Jingkuan Song},
-      year={2024}
+      author={Jianzhi Liu, Junchen Zhu, Lianli Gao, Jingkuan Song},
+      year={2024},
+      eprint={--},
+      archivePrefix={arXiv},
 }
 ```
 

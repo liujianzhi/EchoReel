@@ -733,7 +733,7 @@ class UNetModel(nn.Module):
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
 
-    def forward(self, x, timesteps=None, time_emb_replace=None, context=None, y=None, inject_video=None, inject_text=None, **kwargs):
+    def forward(self, x, timesteps=None, time_emb_replace=None, context=None, y=None, reference_video=None, reference_text=None, **kwargs):
         """
         Apply the model to an input batch.
         :param x: an [N x C x ...] Tensor of inputs.
@@ -755,8 +755,8 @@ class UNetModel(nn.Module):
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)
         if self.EchoReel == True:
-            inject_video = rearrange(inject_video, 'b c t h w -> b t (h w) c')
-            Sout, Tout = self.Action_Prism_process(torch.cat((context, inject_text), dim=1), inject_video)
+            reference_video = rearrange(reference_video, 'b c t h w -> b t (h w) c')
+            Sout, Tout = self.Action_Prism_process(torch.cat((context, reference_text), dim=1), reference_video)
             kwargs['Sout'] = Sout
             kwargs['Tout'] = Tout
         # h = x.type(self.dtype)

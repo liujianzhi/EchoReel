@@ -348,7 +348,7 @@ class DDPM(pl.LightningModule):
         x = batch
         
         x['gt_video'] = x['gt_video'].to(memory_format=torch.contiguous_format)
-        x['inject_video'] = x['inject_video'].to(memory_format=torch.contiguous_format)
+        x['reference_video'] = x['reference_video'].to(memory_format=torch.contiguous_format)
         return x
 
     def shared_step(self, batch):
@@ -574,7 +574,7 @@ class LatentDiffusion(DDPM):
             video1 = video.permute(1, 0, 2, 3).cpu()
             if not os.path.exists(os.path.join('videos', self.name)):
                 os.makedirs(os.path.join('videos', self.name))
-            video = batch['inject_video'][i].float()
+            video = batch['reference_video'][i].float()
             video = video.permute(1, 0, 2, 3).cpu()
             videos = torch.cat((video, video1), dim=0)
             try:
@@ -592,7 +592,7 @@ class LatentDiffusion(DDPM):
             video1 = video.permute(1, 0, 2, 3).cpu()
             if not os.path.exists(os.path.join('videos', self.name)):
                 os.makedirs(os.path.join('videos', self.name))
-            video = batch['inject_video'][i].float()
+            video = batch['reference_video'][i].float()
             video = video.permute(1, 0, 2, 3).cpu()
             videos = torch.cat((video, video1), dim=0)
             try:
@@ -737,10 +737,10 @@ class LatentDiffusion(DDPM):
         
         
         x['gt_video'] = x['gt_video'].to(self.device)
-        x['inject_video'] = x['inject_video'].to(self.device)
+        x['reference_video'] = x['reference_video'].to(self.device)
         x_ori = x
         z1, c1 = self.encode_video_frames(x['gt_video'], x['input_text'])
-        z2, c2 = self.encode_video_frames(x['inject_video'], x['inject_text'])
+        z2, c2 = self.encode_video_frames(x['reference_video'], x['reference_text'])
         out = [z1, c1, z2, c2]
         # out.append(self.get_learned_conditioning("").repeat([c1.shape[0], 1, 1]))
         if return_text:
@@ -888,7 +888,7 @@ class LatentDiffusion(DDPM):
         t = torch.randint(0, self.num_timesteps, (x1.shape[0],), device=self.device).to(x1.dtype)
         return self.p_losses(x1, c1, x2, c2, t, *args, **kwargs)
 
-    def apply_model(self, x_noisy, t, cond, inject_video, inject_text, **kwargs):
+    def apply_model(self, x_noisy, t, cond, reference_video, reference_text, **kwargs):
 
         if isinstance(cond, dict):
             # hybrid case, cond is exptected to be a dict
@@ -897,7 +897,7 @@ class LatentDiffusion(DDPM):
             if isinstance(cond, list):
                 cond = cond[0]
             key = 'c_concat' if self.model.conditioning_key == 'concat' else 'c_crossattn'
-            cond = {key: cond, 'inject_video': inject_video, 'inject_text': inject_text}
+            cond = {key: cond, 'reference_video': reference_video, 'reference_text': reference_text}
 
         x_recon = self.model(x_noisy, t, **cond, **kwargs)
 
@@ -924,14 +924,14 @@ class LatentDiffusion(DDPM):
         kl_prior = normal_kl(mean1=qt_mean, logvar1=qt_log_variance, mean2=0.0, logvar2=0.0)
         return mean_flat(kl_prior) / np.log(2.0)
 
-    def p_losses(self, x_start, cond, inject_video, inject_text, t, noise=None, skip_qsample=False, x_noisy=None, cond_mask=None, **kwargs,):
+    def p_losses(self, x_start, cond, reference_video, reference_text, t, noise=None, skip_qsample=False, x_noisy=None, cond_mask=None, **kwargs,):
         if not skip_qsample:
             noise = default(noise, lambda: torch.randn_like(x_start)).to(self.dtype)
             x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise).to(self.dtype)
         else:
             assert(x_noisy is not None)
             assert(noise is not None)
-        model_output = self.apply_model(x_noisy, t, cond, inject_video, inject_text, **kwargs)
+        model_output = self.apply_model(x_noisy, t, cond, reference_video, reference_text, **kwargs)
 
         loss_dict = {}
         prefix = 'train' if self.training else 'val'
@@ -1229,8 +1229,8 @@ class LatentDiffusion(DDPM):
             noise = torch.randn_like(z1)
             c['noisy_cond'] = self.q_sample(x_start=z1, t=cond_noisy_level, noise=noise)
         c = {'input_text': c1,
-                'inject_text': c2,
-                'inject_video': z2
+                'reference_text': c2,
+                'reference_video': z2
             }
         if sample:
             with self.ema_scope("Plotting"):
@@ -1277,7 +1277,7 @@ class DiffusionWrapper(pl.LightningModule):
         self.conditioning_key = conditioning_key
 
     def forward(self, x, t, c_concat: list = None, c_crossattn: list = None,
-                c_adm=None, s=None, mask=None, inject_video=None, inject_text=None, inject_video2=None, inject_video3=None, **kwargs):
+                c_adm=None, s=None, mask=None, reference_video=None, reference_text=None, reference_video2=None, reference_video3=None, **kwargs):
         if self.conditioning_key is None:
             out = self.diffusion_model(x, t, **kwargs)
         elif self.conditioning_key == 'concat':
@@ -1331,7 +1331,7 @@ class DiffusionWrapper(pl.LightningModule):
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, s=s, y=c_adm, **kwargs)
         elif self.conditioning_key == 'EchoReel':
-            out = self.diffusion_model(x, t, context=c_crossattn, inject_video=inject_video, inject_text=inject_text, **kwargs)
+            out = self.diffusion_model(x, t, context=c_crossattn, reference_video=reference_video, reference_text=reference_text, **kwargs)
         else:
             raise NotImplementedError()
 
