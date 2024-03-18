@@ -2,7 +2,7 @@
 
 <h2> <img src="assets/favicon.ico" style="vertical-align: middle;" width="30" height="30"> EchoReel: <span style="font-size:12px">Enhancing Action Generation of Existing Video Diffusion Models </span> </h2>
 
-<a href='https://arxiv.org/abs/xx.xx'><img src='https://img.shields.io/badge/ArXiv-xx.xx-red'></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://liujianzhi.github.io/EchoReel/'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
+<a href='https://arxiv.org/abs/xx.xx'><img src='https://img.shields.io/badge/ArXiv-xx.xx-red'></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://liujianzhi.github.io/EchoReel-demo/'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
 
 
 <div>
