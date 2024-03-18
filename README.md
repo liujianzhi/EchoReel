@@ -6,10 +6,10 @@
 
 
 <div>
-    <a href='https://github.com/liujianzhi' target='_blank'> Jianzhi Liu </a>&emsp;
-    <a href='https://scholar.google.com/citations?user=J0qJuYAAAAAJ&hl=zh-CN' target='_blank'> Junchen Zhu </a>&emsp;
-    <a href='https://scholar.google.com.au/citations?user=zsm2dpYAAAAJ&hl=en' target='_blank'> Lianli Gao </a>&emsp;
-    <a href='https://scholar.google.com.au/citations?user=F5Zy9V4AAAAJ&hl=en' target='_blank'> Jingkuan Song </a>&emsp;
+    <a href='https://github.com/liujianzhi' target='_blank'> Jianzhi Liu</a>&emsp;
+    <a href='https://scholar.google.com/citations?user=J0qJuYAAAAAJ&hl=zh-CN' target='_blank'> Junchen Zhu</a>&emsp;
+    <a href='https://scholar.google.com.au/citations?user=zsm2dpYAAAAJ&hl=en' target='_blank'> Lianli Gao</a>&emsp;
+    <a href='https://scholar.google.com.au/citations?user=F5Zy9V4AAAAJ&hl=en' target='_blank'> Jingkuan Song</a>&emsp;
 </div>
 <div>
     University of Electronic Science and Technology of China
