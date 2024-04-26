@@ -96,7 +96,7 @@ def main():
     trainer_model = instantiate_from_config(config.model)
     
     for name, parameter in trainer_model.named_parameters():
-        if 'EchoReel' in name:
+        if 'inject' in name:
             parameter.requires_grad = True
             obj = get_nested_attr(trainer_model, name)
         else:
