@@ -95,11 +95,14 @@ pip install -r requirements.txt
 Please ensure the pretrained weights are downloaded from our Hugging Face repository and subsequently placed in the designated 'checkpoint' folder. To optimize functionality, it is strongly advised to download the WebVid .csv file into the specified 'dataset' directory, thereby enabling seamless automatic reference video selection.
 
 ```bash
-mkdir checkpoint && cd checkpoint
+mkdir checkpoint
+cd checkpoint
 wget https://huggingface.co/cscrisp/EchoReel/resolve/main/checkpoint/checkpoint.pt
 cd ..
-mkdir dataset && cd datset
+mkdir dataset
+cd datset
 wget wget http://www.robots.ox.ac.uk/~maxbain/webvid/results_10M_train.csv
+cd ..
 python gr.py
 ```
 
