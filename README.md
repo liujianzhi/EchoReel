@@ -21,15 +21,11 @@
 1️⃣ utilize multiple reference videos to achieve a broader spectrum of action imitation and generate novel actions without fine-tuning;  
 2️⃣ distill effective and related visual motion features instead of replicating the referred content.
 
-
 <div align="left">
-
-
 
 <div style="text-align: center;">
   <i>"Imitation is the sincerest form of flattery that mediocrity can pay to greatness."</i> — Oscar Wilde 
 </div>
-
 
 ## ✌️ Results
 <table class="center">
@@ -60,10 +56,15 @@
 </tr>
 </table > 
 
+## 📝 Changelog
+
+- [2024.4.21] Release pretrain weight
+- [2024.3.18] Release train and inference code
+
 ## ⏳ TODO
 - [x] Release code of LVDM text-to-video with EchoReel
 - [x] Release training code
-- [ ] Release pretrained weight
+- [x] Release pretrained weight
 - [ ] Release image-to-video VideoCrafter code with EchoReel
 
 ## ⚙️ Setup
@@ -87,6 +88,19 @@ Install Environment via Anaconda
 conda create -n EchoReel python=3.10.13
 conda activate EchoReel
 pip install -r requirements.txt
+```
+
+## 💫 For Try
+
+Please ensure the pretrained weights are downloaded from our Hugging Face repository and subsequently placed in the designated 'checkpoint' folder. To optimize functionality, it is strongly advised to download the WebVid .csv file into the specified 'dataset' directory, thereby enabling seamless automatic reference video selection.
+
+```bash
+mkdir checkpoint && cd checkpoint
+wget https://huggingface.co/cscrisp/EchoReel/resolve/main/checkpoint/checkpoint.pt
+cd ..
+mkdir dataset && cd datset
+wget wget http://www.robots.ox.ac.uk/~maxbain/webvid/results_10M_train.csv
+python gr.py
 ```
 
 ## 💫 For Train

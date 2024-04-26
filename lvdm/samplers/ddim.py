@@ -207,15 +207,15 @@ class DDIMSampler(object):
         else:
             is_video = False
         if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
-            e_t = self.model.apply_model(x, t, c['input_text'], c['reference_video'], c['reference_text'], **kwargs) # unet denoiser
+            e_t = self.model.apply_model(x, t, c['input_text'], c['inject_video'], c['inject_text'], **kwargs) # unet denoiser
         else:
             # with unconditional condition
             if isinstance(c, torch.Tensor):
                 e_t = self.model.apply_model(x, t, c, **kwargs)
                 e_t_uncond = self.model.apply_model(x, t, unconditional_conditioning, **kwargs)
             elif isinstance(c, dict):
-                e_t = self.model.apply_model(x, t, c['input_text'], c['reference_video'], c['reference_text'], **kwargs)
-                e_t_uncond = self.model.apply_model(x, t, unconditional_conditioning, c['reference_video'], c['reference_text'], **kwargs)
+                e_t = self.model.apply_model(x, t, c['input_text'], c['inject_video'], c['inject_text'], **kwargs)
+                e_t_uncond = self.model.apply_model(x, t, unconditional_conditioning, c['inject_video'], c['inject_text'], **kwargs)
             else:
                 raise NotImplementedError
 

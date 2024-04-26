@@ -219,10 +219,13 @@ class ResBlock(TimestepBlock):
         :param emb: an [N x emb_channels] Tensor of timestep embeddings.
         :return: an [N x C x ...] Tensor of outputs.
         """
-        return checkpoint(self._forward, 
-                          x,
-                          emb
-                          )
+        if self.use_checkpoint:
+            return checkpoint(self._forward, 
+                            x,
+                            emb
+                            )
+        else:
+            return self._forward(x, emb)
 
     def _forward(self, x, emb,):
         if self.updown:
@@ -269,6 +272,106 @@ try:
 except:
     XFORMERS_IS_AVAILBLE = False
 
+# class Perceiver_layer(nn.Module): ## text queue
+#     def __init__(self, 
+#                  latent_query_dim=320, 
+#                  n_heads=8, 
+#                  d_head=80, 
+#                  dropout=0, 
+#                  latent_context_dim=320,
+#                  temporal_length=16,
+#                  use_relative_position=True,
+#                  gated_ff=True
+#                  ):
+#         super().__init__()
+#         if XFORMERS_IS_AVAILBLE:
+#             self.attn1 = MemoryEfficientCrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout)
+#             self.attn2 = MemoryEfficientCrossAttention(query_dim=latent_query_dim, context_dim=latent_context_dim,
+#                                         heads=n_heads, dim_head=d_head, dropout=dropout)
+#         else:
+#             self.attn1 = CrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout)
+#             self.attn2 = CrossAttention(query_dim=latent_query_dim, context_dim=latent_context_dim,
+#                                     heads=n_heads, dim_head=d_head, dropout=dropout)
+#         self.attn1_tmp = TemporalCrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout,
+#                                                 temporal_length=temporal_length,
+#                                                 use_relative_position=use_relative_position,
+#         )
+#         self.attn2_tmp = TemporalCrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout,
+#                                                 # cross attn
+#                                                 context_dim=None,
+#                                                 # temporal attn
+#                                                 temporal_length=temporal_length,
+#                                                 use_relative_position=use_relative_position,
+#         )
+#         self.ff1 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
+#         self.ff2 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
+#         self.ff3 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
+#         self.ff4 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
+#         self.norm1 = nn.LayerNorm(latent_query_dim)
+#         self.norm2 = nn.LayerNorm(latent_query_dim)
+#         self.norm3 = nn.LayerNorm(latent_query_dim)
+#         self.norm4 = nn.LayerNorm(latent_query_dim)
+#         self.norm5 = nn.LayerNorm(latent_query_dim)
+#         self.norm6 = nn.LayerNorm(latent_query_dim)
+#         self.norm7 = nn.LayerNorm(latent_query_dim)
+#         self.norm8 = nn.LayerNorm(latent_query_dim)
+    
+#     def forward(self, text, video):
+#         return checkpoint(self._forward, text, video).requires_grad_(True)
+
+#     def _forward(self, text, video):
+#         assert len(text.shape) == 4
+#         b, t, l, _ = text.shape
+#         assert len(video.shape) == 3
+#         # vb, vt, vhw, vc = video.shape
+
+#         text = rearrange(text, 'b t l c -> (b t) l c')
+#         text = self.attn1(self.norm1(text)) + text
+#         text = self.ff1(self.norm2(text)) + text
+#         text = rearrange(text, '(b t) l c -> (b l) t c', b=b, t=t, l=l)
+#         text = self.attn1_tmp(self.norm3(text)) + text
+#         text = self.ff2(self.norm4(text)) + text
+#         text = rearrange(text, '(b l) t c -> (b t) l c', b=b, t=t, l=l)
+#         text = self.attn2(self.norm5(text), context=video) + text
+#         text = self.ff3(self.norm6(text)) + text
+#         text = rearrange(text, '(b t) l c -> (b l) t c', b=b, t=t, l=l)
+#         text = self.attn2_tmp(self.norm7(text)) + text
+#         text = self.ff4(self.norm8(text)) + text
+#         text = rearrange(text, '(b l) t c -> b t l c', b=b)
+#         return text
+
+
+            
+
+# class Perceiver(nn.Module): ##
+#     def __init__(self, 
+#                  input_query_dim=768, 
+#                  latent_query_dim=640, 
+#                  n_heads=8, 
+#                  d_head=40, 
+#                  dropout=0, 
+#                  input_context_dim=4, 
+#                  latent_context_dim=320,
+#                  layers=18):
+#         super().__init__()
+#         self.input_to_latent = nn.Linear(in_features=input_query_dim, out_features=latent_query_dim)
+#         self.video_to_latent = nn.Linear(in_features=input_context_dim, out_features=latent_context_dim)
+#         self.net = nn.ModuleList([Perceiver_layer(latent_query_dim=latent_query_dim, latent_context_dim=latent_context_dim) for _ in range(layers)])
+        
+#         self.latent_to_out = nn.Linear(in_features=154*latent_query_dim, out_features=input_query_dim)
+
+#     def forward(self, text, video):
+#         text = self.input_to_latent(text)
+#         video = self.video_to_latent(video)
+#         b, t, hw, c = video.shape
+#         text = repeat(text, 'b l d -> b t l d', t = t)
+#         video = rearrange(video, 'b t l c -> (b t) l c')
+#         for l in self.net:
+#             text = l(text, video)
+#         text = rearrange(text, 'b t l c -> b t (l c)')
+#         text = self.latent_to_out(text)
+#         return text
+
 class Perceiver_layer(nn.Module):
     def __init__(self, 
                  latent_query_dim=320, 
@@ -278,7 +381,8 @@ class Perceiver_layer(nn.Module):
                  latent_context_dim=320,
                  temporal_length=16,
                  use_relative_position=True,
-                 gated_ff=True
+                 gated_ff=True,
+                 use_checkpoint=True
                  ):
         super().__init__()
         if XFORMERS_IS_AVAILBLE:
@@ -287,7 +391,7 @@ class Perceiver_layer(nn.Module):
                                         heads=n_heads, dim_head=d_head, dropout=dropout)
         else:
             self.attn1 = CrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout)
-            self.attn2 = CrossAttention(query_dim=latent_query_dim, context_dim=latent_context_dim,
+            self.attn2 = CrossAttention(query_dim=latent_query_dim, context_dim=None,
                                     heads=n_heads, dim_head=d_head, dropout=dropout)
         self.attn1_tmp = TemporalCrossAttention(query_dim=latent_query_dim, heads=n_heads, dim_head=d_head, dropout=dropout,
                                                 temporal_length=temporal_length,
@@ -300,7 +404,7 @@ class Perceiver_layer(nn.Module):
                                                 temporal_length=temporal_length,
                                                 use_relative_position=use_relative_position,
         )
-        self.ff = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
+        self.ff1 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
         self.ff2 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
         self.ff3 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
         self.ff4 = FeedForward(latent_query_dim, dropout=dropout, glu=gated_ff)
@@ -312,9 +416,13 @@ class Perceiver_layer(nn.Module):
         self.norm6 = nn.LayerNorm(latent_query_dim)
         self.norm7 = nn.LayerNorm(latent_query_dim)
         self.norm8 = nn.LayerNorm(latent_query_dim)
+        self.use_checkpoint = use_checkpoint
     
     def forward(self, text, video):
-        return checkpoint(self._forward, text, video).requires_grad_(True)
+        if self.use_checkpoint:
+            return checkpoint(self._forward, text, video).requires_grad_(True)
+        else:
+            return self._forward(text, video)
 
     def _forward(self, text, video):
         assert len(video.shape) == 4
@@ -339,7 +447,7 @@ class Perceiver_layer(nn.Module):
         video = rearrange(video, '(b l) t c -> b t l c', b=b)
         return video
 
-class Action_Prism(nn.Module):
+class Perceiver(nn.Module):
     def __init__(self, 
                  input_query_dim=4, 
                  latent_query_dim=640, 
@@ -348,11 +456,12 @@ class Action_Prism(nn.Module):
                  dropout=0, 
                  input_context_dim=768, 
                  latent_context_dim=768,
-                 layers=18):
+                 layers=18,
+                 use_checkpoint=True):
         super().__init__()
         self.input_to_latent = nn.Linear(in_features=input_context_dim, out_features=latent_context_dim)
         self.video_to_latent = nn.Linear(in_features=input_query_dim, out_features=latent_query_dim)
-        self.net = nn.ModuleList([Perceiver_layer(latent_query_dim=latent_query_dim, latent_context_dim=latent_context_dim) for _ in range(layers)])
+        self.net = nn.ModuleList([Perceiver_layer(latent_query_dim=latent_query_dim, latent_context_dim=latent_context_dim, use_checkpoint=use_checkpoint) for _ in range(layers)])
         
         self.latent_to_T = nn.Sequential(
             nn.Linear(in_features=latent_query_dim, out_features=latent_query_dim * 4),
@@ -445,11 +554,12 @@ class UNetModel(nn.Module):
         nonlinearity_type='silu',
         ST_transformer_module='attention_temporal',
         ST_transformer_class='SpatialTemporalTransformer',
-        EchoReel=False,
+        video_inject=False,
         **kwargs,
     ):
         
         super().__init__()
+        kwargs['video_inject'] = video_inject
         if use_temporal_transformer:
             assert context_dim is not None, 'Fool!! You forgot to include the dimension of your cross-attention conditioning...'
         if context_dim is not None:
@@ -457,7 +567,7 @@ class UNetModel(nn.Module):
             from omegaconf.listconfig import ListConfig
             if type(context_dim) == ListConfig:
                 context_dim = list(context_dim)
-        self.EchoReel = EchoReel
+
         if num_heads_upsample == -1:
             num_heads_upsample = num_heads
 
@@ -487,9 +597,28 @@ class UNetModel(nn.Module):
         self.temporal_length = temporal_length
         self.nonlinearity_type = nonlinearity_type
         
-        self.EchoReel = EchoReel
-        if self.EchoReel:
-            self.Action_Prism_process = Action_Prism()
+        self.video_inject = video_inject
+        if self.video_inject:
+            self.video_inject_process = Perceiver(use_checkpoint=self.use_checkpoint)
+            # = Perceiver(input_channels = 4,          # number of channels for each token of the input
+            #                                 input_axis = 2,              # number of axis for input data (2 for images, 3 for video)
+            #                                 num_freq_bands = 6,          # number of freq bands, with original value (2 * K + 1)
+            #                                 max_freq = 10.,              # maximum frequency, hyperparameter depending on how fine the data is
+            #                                 depth = 12,                   # depth of net. The shape of the final attention mechanism will be:
+            #                                                             #   depth * (cross attention -> self_per_cross_attn * self attention)
+            #                                 num_latents = 154,           # number of latents, or induced set points, or centroids. different papers giving it different names
+            #                                 latent_dim = 768,            # latent dimension
+            #                                 cross_heads = 4,             # number of heads for cross attention. paper said 1
+            #                                 latent_heads = 8,            # number of heads for latent self attention, 8
+            #                                 cross_dim_head = 512,         # number of dimensions per cross attention head
+            #                                 latent_dim_head = 512,        # number of dimensions per latent self attention head
+            #                                 num_classes = 768,          # output number of classes
+            #                                 attn_dropout = 0.,
+            #                                 ff_dropout = 0.,
+            #                                 weight_tie_layers = False,   # whether to weight tie layers (optional, as indicated in the diagram)
+            #                                 fourier_encode_data = True,  # whether to auto-fourier encode the data, using the input_axis given. defaults to True, but can be turned off if you are fourier encoding the data yourself
+            #                                 self_per_cross_attn = 2      # number of self attention blocks per cross attention
+            #                             ).cuda()
             pass
         time_embed_dim = model_channels * 4
         self.time_embed_dim = time_embed_dim
@@ -553,6 +682,7 @@ class UNetModel(nn.Module):
                             use_relative_position=use_relative_position,
                         ) if not use_temporal_transformer else STTransformerClass(
                             ch, num_heads, dim_head, depth=transformer_depth, context_dim=context_dim,
+                            use_checkpoint=use_checkpoint,
                             # temporal related
                             temporal_length=temporal_length,
                             use_relative_position=use_relative_position,
@@ -598,6 +728,7 @@ class UNetModel(nn.Module):
             dim_head = num_head_channels
         if legacy:
             dim_head = ch // num_heads if use_temporal_transformer else num_head_channels
+        # kwargs['video_inject'] = True
         self.middle_block = TimestepEmbedSequential(
             ResBlock(
                 ch,
@@ -639,6 +770,7 @@ class UNetModel(nn.Module):
                 **kwargs
             ),
         )
+        # kwargs['video_inject'] = False
         self._feature_size += ch
         self.output_blocks = nn.ModuleList([])
         for level, mult in list(enumerate(channel_mult))[::-1]:
@@ -733,7 +865,7 @@ class UNetModel(nn.Module):
         self.middle_block.apply(convert_module_to_f32)
         self.output_blocks.apply(convert_module_to_f32)
 
-    def forward(self, x, timesteps=None, time_emb_replace=None, context=None, y=None, reference_video=None, reference_text=None, **kwargs):
+    def forward(self, x, timesteps=None, time_emb_replace=None, context=None, y=None, inject_video=None, inject_text=None, **kwargs):
         """
         Apply the model to an input batch.
         :param x: an [N x C x ...] Tensor of inputs.
@@ -754,9 +886,9 @@ class UNetModel(nn.Module):
         if y is not None:
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)
-        if self.EchoReel == True:
-            reference_video = rearrange(reference_video, 'b c t h w -> b t (h w) c')
-            Sout, Tout = self.Action_Prism_process(torch.cat((context, reference_text), dim=1), reference_video)
+        if self.video_inject == True:
+            inject_video = rearrange(inject_video, 'b c t h w -> b t (h w) c')
+            Sout, Tout = self.video_inject_process(torch.cat((context, inject_text), dim=1), inject_video)
             kwargs['Sout'] = Sout
             kwargs['Tout'] = Tout
         # h = x.type(self.dtype)

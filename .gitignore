@@ -7,3 +7,6 @@ results/
 *.pt
 *.ckpt
 clip-vit-large-patch14
+checkpoint
+output_video.mp4
+dataset
