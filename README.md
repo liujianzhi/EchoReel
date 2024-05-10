@@ -139,4 +139,4 @@ bash sample_EchoReel.sh
 
 ## 🤗 Acknowledgements
 
-We built our code partially based on [latent video diffusion models](https://github.com/CompVis/latent-diffusion). Thanks for their wonderful work!
+We built our code partially based on [latent video diffusion models](https://github.com/YingqingHe/LVDM). Thanks for their wonderful work!
